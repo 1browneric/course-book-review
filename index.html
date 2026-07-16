@@ -350,7 +350,7 @@ const COURSE = {"name":"Shoal Creek Golf Course","city":"Kansas City, Missouri",
       Par The Course PDFs (see the sunday-game skill's extract_book.py).
    =================================================================== */
 const NTFY = "https://ntfy.sh";
-const TOPIC = "rt-shc-8906bfb550";
+const TOPIC = "rt-shc-c9e2ea2c4e";
 const LS_KEY = "rt_shc_2026_v1";
 
 const ROUND = { date:"2026-07-16", course:"Shoal Creek Golf Course", par:71 };
@@ -886,7 +886,6 @@ function pinAdvice(holeN){
   }
   if (back) parts.push("Back pin: take one more club, don't short-side yourself.");
   else if (front) parts.push("Front pin: spin it or land it soft — long leaves a downhill comeback.");
-  parts.push("Blue ring = the fat-side target; play there, not at the flag.");
   return parts.join(" ");
 }
 
