@@ -318,15 +318,32 @@ input,textarea,select{font-family:inherit}
 .wxrow{display:flex;gap:16px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.13)}
 .wxcell .wxv{font-weight:600;font-size:15px;color:#F7F4EA}
 .wxcell .wxk{font-family:'Montserrat',sans-serif;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#9FB0C4;margin-top:2px}
+/* Golf Hub masthead */
+.masthead{text-align:left;padding:22px 20px 16px}
+.mh-eyebrow{font-family:'Montserrat',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;color:#8FA0B8}
+.mh-title{font-family:'Libre Baskerville',Georgia,serif;font-weight:700;font-size:32px;line-height:1.05;color:#F4EFE4;margin:6px 0 10px}
+.mh-course{font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#F4EFE4}
+.mh-city{font-family:'Barlow',sans-serif;font-size:12px;color:#8FA0B8;margin-top:3px}
+.mh-date{appearance:none;-webkit-appearance:none;background:transparent;border:none;padding:0;margin-top:4px;
+  font-family:'Spline Sans Mono',ui-monospace,monospace;font-weight:600;font-size:12px;color:#8FA0B8;width:auto}
+.mh-date:focus{outline:1.5px solid #B22234;border-radius:4px}
+/* scorecard symbols: circle birdie, double-circle eagle, square bogey, double-square worse */
+.mk{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;font-weight:700;margin:1px}
+.mk.brd{border:1.5px solid #1E8E4F;border-radius:50%;color:#1E8E4F}
+.mk.eag{border:1.5px solid #1E8E4F;border-radius:50%;color:#1E8E4F;box-shadow:0 0 0 2px #F4EFE4,0 0 0 3.5px #1E8E4F}
+.mk.bgy{border:1.5px solid #B22234;color:#B22234}
+.mk.dbl{border:1.5px solid #B22234;color:#B22234;box-shadow:0 0 0 2px #F4EFE4,0 0 0 3.5px #B22234}
+.mk.parr{color:#16243A}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="masthead">
-    <h1 class="wordmark">Round <em>Tracker</em></h1>
-    <div class="rule"></div>
-    <div class="sub">Shoal Creek Golf Course &middot; Kansas City, MO</div>
-    <div class="sub">2026</div>
+    <div class="mh-eyebrow">THE GOLF HUB</div>
+    <h1 class="mh-title">Round Tracker</h1>
+    <div class="mh-course">Shoal Creek Golf Course</div>
+    <div class="mh-city"><i>Kansas City, MO</i></div>
+    <input class="mh-date" id="rdate" type="date" aria-label="Round date">
   </header>
   <nav class="tabs" role="tablist">
     <button class="tab on" data-tab="hole" role="tab">Hole</button>
@@ -350,7 +367,7 @@ const COURSE = {"name":"Shoal Creek Golf Course","city":"Kansas City, Missouri",
       Par The Course PDFs (see the sunday-game skill's extract_book.py).
    =================================================================== */
 const NTFY = "https://ntfy.sh";
-const TOPIC = "rt-shc-6bdc158e2f";
+const TOPIC = "rt-shc-94cedcdda4";
 const LS_KEY = "rt_shc_2026_v1";
 
 const ROUND = { date:"2026-07-16", course:"Shoal Creek Golf Course", par:71 };
@@ -922,6 +939,13 @@ fetch("https://api.open-meteo.com/v1/forecast?latitude="+COURSE.lat+"&longitude=
     render();
   }).catch(()=>{ WXD.cond="Weather unavailable"; render(); });
 
+/* editable round date (masthead) — persists locally, feeds the export */
+const DK = LS_KEY + "_date";
+const dEl = document.getElementById("rdate");
+dEl.value = localStorage.getItem(DK) || ROUND.date;
+ROUND.date = dEl.value;
+dEl.addEventListener("change", () => { if(dEl.value){ ROUND.date = dEl.value; localStorage.setItem(DK, dEl.value); } });
+
 function render(){
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.tab===tab));
   const main = $("#main");
@@ -1224,10 +1248,12 @@ function viewOverview(){
   </div>`;
   const rows = HOLES.map(h => {
     const f = F(h.n);
-    const cls = f.score==null ? "" : f.score<h.par ? " bird" : f.score>h.par ? " bog" : "";
+    const d = f.score==null ? null : f.score - h.par;
+    const mk = d==null ? "&middot;"
+      : `<span class="mk ${d<=-2?"eag":d===-1?"brd":d===0?"parr":d===1?"bgy":"dbl"}">${f.score}</span>`;
     const yn = v => v==="Y" ? `<span class="ok">&#10003;</span>` : v==="N" ? `<span class="miss">&#10007;</span>` : "&middot;";
     return `<tr><td class="hn">${h.n}</td><td>${h.par}</td>
-      <td class="sc${cls}">${f.score ?? "&middot;"}</td>
+      <td>${mk}</td>
       <td>${h.par===3 ? "&mdash;" : yn(effFir(h))}</td><td>${yn(effGir(h))}</td>
       <td>${puttCount(h.n) ?? "&middot;"}</td><td>${f.pen || "&middot;"}</td></tr>`;
   }).join("");
